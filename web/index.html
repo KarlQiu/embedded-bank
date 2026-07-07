@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#256d5a" />
+    <title>嵌入式校招八股题库</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="auth-view" class="auth-view" hidden>
+      <form id="auth-form" class="auth-panel" autocomplete="off">
+        <p class="eyebrow">Embedded Interview Bank</p>
+        <h1>嵌入式校招八股题库</h1>
+        <label for="password-input">访问密码</label>
+        <div class="password-row">
+          <input id="password-input" name="password" type="password" inputmode="text" autofocus />
+          <button type="submit">进入</button>
+        </div>
+        <p id="auth-error" class="form-error" role="alert" hidden>密码不正确</p>
+        <p class="auth-note">静态站密码只用于防止随手访问，不是严格私有鉴权。</p>
+      </form>
+    </div>
+
+    <div id="app-view" class="app-shell" hidden>
+      <header class="topbar">
+        <button id="menu-toggle" class="icon-button" type="button" aria-label="打开目录">☰</button>
+        <div class="brand">
+          <span>嵌入式题库</span>
+          <small id="question-count">加载中</small>
+        </div>
+        <label class="search-box" for="search-input">
+          <span>⌕</span>
+          <input id="search-input" type="search" placeholder="搜索题目、知识点、代码关键词" autocomplete="off" />
+        </label>
+        <button id="settings-toggle" class="icon-button" type="button" aria-label="打开外观设置">Aa</button>
+      </header>
+
+      <aside id="sidebar" class="sidebar">
+        <div class="sidebar-head">
+          <strong>大纲</strong>
+          <button id="sidebar-close" class="icon-button" type="button" aria-label="关闭目录">×</button>
+        </div>
+        <button id="continue-button" class="continue-button" type="button" hidden>继续上次阅读</button>
+        <nav id="outline" class="outline" aria-label="题库大纲"></nav>
+      </aside>
+
+      <main class="reader">
+        <section id="search-results" class="search-results" hidden></section>
+        <article id="content" class="content"></article>
+      </main>
+
+      <section id="settings-panel" class="settings-panel" hidden>
+        <div class="settings-head">
+          <strong>外观</strong>
+          <button id="settings-close" class="icon-button" type="button" aria-label="关闭设置">×</button>
+        </div>
+        <fieldset>
+          <legend>背景</legend>
+          <div class="theme-grid">
+            <button type="button" data-theme="light">浅色</button>
+            <button type="button" data-theme="dark">深色</button>
+            <button type="button" data-theme="green">护眼</button>
+            <button type="button" data-theme="paper">纸张</button>
+          </div>
+        </fieldset>
+        <label>
+          字体大小
+          <input id="font-size" type="range" min="15" max="22" step="1" />
+        </label>
+        <label>
+          行距
+          <input id="line-height" type="range" min="1.45" max="1.95" step="0.05" />
+        </label>
+        <button id="logout-button" class="secondary-button" type="button">清除登录状态</button>
+      </section>
+
+      <footer class="bottom-actions" aria-label="阅读操作">
+        <button id="prev-button" type="button">上一题</button>
+        <button id="bookmark-button" type="button">收藏</button>
+        <button id="master-button" type="button">掌握</button>
+        <button id="review-button" type="button">待复习</button>
+        <button id="next-button" type="button">下一题</button>
+      </footer>
+      <div id="scrim" class="scrim" hidden></div>
+    </div>
+
+    <script src="./data/questions.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "嵌入式校招八股题库",
+  "short_name": "嵌入式题库",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f7f8f5",
+  "theme_color": "#256d5a",
+  "lang": "zh-CN",
+  "icons": []
+}
