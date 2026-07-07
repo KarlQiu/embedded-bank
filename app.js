@@ -19,6 +19,7 @@
     currentDoc: null,
     currentQuestion: null,
     flat: [],
+    expandedDocs: new Set(),
     bookmarks: new Set(readJson(keys.bookmarks, [])),
     mastered: readJson(keys.mastered, {}),
     theme: readJson(keys.theme, { name: "light", fontSize: 17, lineHeight: 1.72 }),
@@ -169,40 +170,102 @@
   function renderOutline() {
     els.outline.innerHTML = "";
     DATA.docs.forEach((doc) => {
-      const group = document.createElement("section");
+      const group = document.createElement("details");
       group.className = "doc-group";
-      const docButton = document.createElement("button");
-      docButton.className = "doc-button";
-      docButton.type = "button";
-      docButton.innerHTML = `<span>${escapeHtml(doc.shortTitle || doc.title)}</span><small>${doc.questions.length || "文档"}</small>`;
-      docButton.addEventListener("click", () => navigate(`#/doc/${doc.slug}`));
-      group.appendChild(docButton);
+      group.dataset.doc = doc.slug;
+      group.open = shouldOpenDoc(doc);
+
+      const summary = document.createElement("summary");
+      summary.className = "doc-summary";
+      summary.innerHTML = `<span>${escapeHtml(doc.shortTitle || doc.title)}</span><small>${doc.questions.length ? `${doc.questions.length} 题` : "文档"}</small>`;
+      summary.addEventListener("click", () => {
+        setTimeout(() => {
+          if (group.open) state.expandedDocs.add(doc.slug);
+          else state.expandedDocs.delete(doc.slug);
+        }, 0);
+      });
+      group.appendChild(summary);
 
       if (doc.questions.length) {
         const list = document.createElement("div");
         list.className = "section-list";
+        const overview = document.createElement("button");
+        overview.className = "doc-overview";
+        overview.type = "button";
+        overview.textContent = "查看本专题概览";
+        overview.addEventListener("click", () => navigate(`#/doc/${doc.slug}`));
+        list.appendChild(overview);
+
         let lastSection = "";
-        doc.questions.forEach((question) => {
+        let sectionGroup = null;
+        let sectionBody = null;
+        doc.questions.forEach((question, index) => {
           if (question.section && question.section !== lastSection) {
             lastSection = question.section;
-            const title = document.createElement("div");
-            title.className = "section-title";
-            title.textContent = lastSection;
-            list.appendChild(title);
+            const count = doc.questions.filter((item) => item.section === lastSection).length;
+            sectionGroup = document.createElement("details");
+            sectionGroup.className = "section-group";
+            sectionGroup.open = shouldOpenSection(doc, lastSection);
+            const sectionSummary = document.createElement("summary");
+            sectionSummary.className = "section-title";
+            sectionSummary.innerHTML = `<span>${escapeHtml(lastSection)}</span><small>${count} 题</small>`;
+            sectionGroup.appendChild(sectionSummary);
+            sectionBody = document.createElement("div");
+            sectionBody.className = "question-list";
+            sectionGroup.appendChild(sectionBody);
+            list.appendChild(sectionGroup);
           }
+
+          if (!sectionGroup || !sectionBody) {
+            sectionGroup = document.createElement("details");
+            sectionGroup.className = "section-group";
+            sectionGroup.open = index < 20;
+            const sectionSummary = document.createElement("summary");
+            sectionSummary.className = "section-title";
+            sectionSummary.innerHTML = `<span>题目</span><small>${doc.questions.length} 题</small>`;
+            sectionGroup.appendChild(sectionSummary);
+            sectionBody = document.createElement("div");
+            sectionBody.className = "question-list";
+            sectionGroup.appendChild(sectionBody);
+            list.appendChild(sectionGroup);
+          }
+
           const link = document.createElement("button");
           link.className = "question-link";
           link.type = "button";
           link.dataset.route = routeFor(doc.slug, question.id);
           link.textContent = `${question.id}: ${question.title}`;
           link.addEventListener("click", () => navigate(link.dataset.route));
-          list.appendChild(link);
+          sectionBody.appendChild(link);
         });
+        group.appendChild(list);
+      } else {
+        const list = document.createElement("div");
+        list.className = "section-list";
+        const overview = document.createElement("button");
+        overview.className = "doc-overview";
+        overview.type = "button";
+        overview.textContent = "打开文档";
+        overview.addEventListener("click", () => navigate(`#/doc/${doc.slug}`));
+        list.appendChild(overview);
         group.appendChild(list);
       }
 
       els.outline.appendChild(group);
     });
+  }
+
+  function shouldOpenDoc(doc) {
+    return state.expandedDocs.has(doc.slug) || (state.currentDoc && state.currentDoc.slug === doc.slug);
+  }
+
+  function shouldOpenSection(doc, section) {
+    return Boolean(
+      state.currentDoc &&
+        state.currentDoc.slug === doc.slug &&
+        state.currentQuestion &&
+        state.currentQuestion.section === section
+    );
   }
 
   function routeFromHash(options = {}) {
@@ -214,7 +277,9 @@
     const question = questionId ? doc.questions.find((item) => item.id === questionId) : null;
     state.currentDoc = doc;
     state.currentQuestion = question || null;
+    state.expandedDocs.add(doc.slug);
     renderContent(doc, question);
+    renderOutline();
     markActiveLink();
     closeSidebar();
     saveProgress();
@@ -414,6 +479,13 @@
     document.querySelectorAll(".question-link").forEach((link) => {
       link.classList.toggle("active", link.dataset.route === route);
     });
+    const active = document.querySelector(".question-link.active");
+    if (active) {
+      const section = active.closest(".section-group");
+      const doc = active.closest(".doc-group");
+      if (section) section.open = true;
+      if (doc) doc.open = true;
+    }
   }
 
   function setButtonActive(button, active, text) {
